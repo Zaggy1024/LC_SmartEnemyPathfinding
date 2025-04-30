@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{A980AC20-4173-49E7-8365-9A001A765BDC}") = "SmartEnemyPathfinding", "SmartEnemyPathfinding\SmartEnemyPathfinding.csproj", "{AA0B12BE-5E12-4FBC-AA38-6B5BA3A28DE3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA0B12BE-5E12-4FBC-AA38-6B5BA3A28DE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA0B12BE-5E12-4FBC-AA38-6B5BA3A28DE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA0B12BE-5E12-4FBC-AA38-6B5BA3A28DE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA0B12BE-5E12-4FBC-AA38-6B5BA3A28DE3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
