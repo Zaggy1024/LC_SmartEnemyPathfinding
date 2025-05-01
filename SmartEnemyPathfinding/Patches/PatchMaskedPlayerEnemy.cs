@@ -1,7 +1,8 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
+using GameNetcodeStuff;
 using HarmonyLib;
 using PathfindingLib.API.SmartPathfinding;
 using UnityEngine;
@@ -158,6 +159,31 @@ internal static class PatchMaskedPlayerEnemy
         masked.StartSmartSearch(searchStart, GetAllowedPathLinks(), RoamToSmartPathDestination, searchRoutine);
     }
 
+    private static void PathToPlayer(MaskedPlayerEnemy masked, PlayerControllerB player)
+    {
+        if (tasks.TryGetValue(masked, out var task))
+        {
+            if (!task.IsResultReady(0))
+                return;
+
+            if (task.GetResult(0) is SmartPathDestination destination)
+            {
+                if (destination.Type == SmartDestinationType.DirectToDestination)
+                    masked.SetMovingTowardsTargetPlayer(player);
+                else
+                    GoToSmartPathDestination(masked, in destination);
+            }
+        }
+        else
+        {
+            task = new SmartPathTask();
+            tasks[masked] = task;
+        }
+
+        task.StartPathTask(masked.agent, masked.transform.position, player.transform.position, GetAllowedPathLinks());
+        return;
+    }
+
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(MaskedPlayerEnemy.DoAIInterval))]
     private static IEnumerable<CodeInstruction> DoAIIntervalTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
@@ -194,11 +220,11 @@ internal static class PatchMaskedPlayerEnemy
                 new(OpCodes.Ret),
             ])
             .GoToMatchEnd()
-            .AddLabel(skipReturnLabel)
-            .GoToStart();
+            .AddLabel(skipReturnLabel);
 
         // - this.StartSearch([...])
         // + PatchMaskedPlayerEnemy.StartSearch(this, [...])
+        injector.GoToStart();
         while (true)
         {
             injector
@@ -212,6 +238,26 @@ internal static class PatchMaskedPlayerEnemy
             injector
                 .ReplaceLastMatch([
                     new(OpCodes.Call, typeof(PatchMaskedPlayerEnemy).GetMethod(nameof(StartSearch), BindingFlags.NonPublic | BindingFlags.Static, [typeof(MaskedPlayerEnemy), typeof(Vector3), typeof(AISearchRoutine)])),
+                ])
+                .GoToMatchEnd();
+        }
+
+        // - this.SetMovingTowardsTargetPlayer(player)
+        // + PatchMaskedPlayerEnemy.PathToPlayer(this, player)
+        injector.GoToStart();
+        while (true)
+        {
+            injector
+                .Find([
+                    ILMatcher.Call(typeof(EnemyAI).GetMethod(nameof(EnemyAI.SetMovingTowardsTargetPlayer), [typeof(PlayerControllerB)])),
+                ]);
+
+            if (!injector.IsValid)
+                break;
+
+            injector
+                .ReplaceLastMatch([
+                    new(OpCodes.Call, typeof(PatchMaskedPlayerEnemy).GetMethod(nameof(PathToPlayer), BindingFlags.NonPublic | BindingFlags.Static, [typeof(MaskedPlayerEnemy), typeof(PlayerControllerB)])),
                 ])
                 .GoToMatchEnd();
         }
