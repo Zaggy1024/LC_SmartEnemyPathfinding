@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -49,7 +49,7 @@ internal static class PatchMaskedPlayerEnemy
     {
         var allowedLinks = SmartPathfindingLinkFlags.InternalTeleports | SmartPathfindingLinkFlags.Elevators | SmartPathfindingLinkFlags.MainEntrance;
         if (globalRoaming)
-            allowedLinks = SmartPathfindingLinkFlags.FireExits;
+            allowedLinks |= SmartPathfindingLinkFlags.FireExits;
         return allowedLinks;
     }
 
