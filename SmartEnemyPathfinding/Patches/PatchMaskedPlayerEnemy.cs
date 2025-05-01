@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -134,6 +134,9 @@ internal static class PatchMaskedPlayerEnemy
 
     private static bool CheckIfPlayersAreTargetable(MaskedPlayerEnemy masked)
     {
+        if (globalRoaming)
+            return true;
+
         if (masked.GetClosestPlayer() == null)
         {
             var result = GoToDestination(masked, RoundManager.FindMainEntrancePosition(getTeleportPosition: true, getOutsideEntrance: !masked.isOutside));
