@@ -75,32 +75,27 @@ internal static class PatchMaskedPlayerEnemy
 
     private static bool GoToSmartPathDestination(MaskedPlayerEnemy masked, in SmartPathDestination destination)
     {
-        switch (destination.Type)
+        if (Vector3.Distance(masked.transform.position, destination.Position) <= 1f && destination.CanActivateDestination(masked.transform.position))
         {
-            case SmartDestinationType.DirectToDestination:
-                masked.SetDestinationToPosition(destination.Position);
-                break;
-            case SmartDestinationType.InternalTeleport:
-                masked.SetDestinationToPosition(destination.Position);
-
-                if (Vector3.Distance(masked.transform.position, destination.Position) < 1f)
+            switch (destination.Type)
+            {
+                case SmartDestinationType.DirectToDestination:
+                    break;
+                case SmartDestinationType.InternalTeleport:
                     masked.agent.Warp(destination.InternalTeleport.Destination.position);
-                break;
-            case SmartDestinationType.Elevator:
-                masked.SetDestinationToPosition(destination.Position);
-
-                if (Vector3.Distance(masked.transform.position, destination.Position) < 1f)
+                    break;
+                case SmartDestinationType.Elevator:
                     destination.ElevatorFloor.CallElevator();
-                break;
-            case SmartDestinationType.EntranceTeleport:
-                masked.SetDestinationToPosition(destination.Position);
-
-                if (Vector3.Distance(masked.transform.position, destination.Position) < 1f)
+                    break;
+                case SmartDestinationType.EntranceTeleport:
                     UseTeleport(masked, destination.EntranceTeleport);
-                break;
-            default:
-                return false;
+                    break;
+                default:
+                    return false;
+            }
         }
+
+        masked.SetDestinationToPosition(destination.Position);
         return true;
     }
 
