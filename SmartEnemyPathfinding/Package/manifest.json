@@ -6,6 +6,6 @@
     "description": "Patches the masked to allow them to use custom elevators via PathfindingLib's smart pathfinding API.",
     "dependencies": [
         "BepInEx-BepInExPack-5.4.2100",
-        "Zaggy1024-PathfindingLib-2.0.0"
+        "Zaggy1024-PathfindingLib-2.2.0"
     ]
 }
