@@ -26,7 +26,7 @@
         </Reference>
     </ItemGroup>
 
-    <Target Name="CopyToPackage" AfterTargets="AfterBuild">
+    <Target Name="CopyToPackage" AfterTargets="AfterBuild" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
         <Copy SourceFiles="$(SolutionDir)LICENSE" DestinationFolder="$(MSBuildProjectDirectory)\Package" />
         <Copy SourceFiles="$(SolutionDir)README.md" DestinationFolder="$(MSBuildProjectDirectory)\Package" />
         <Copy SourceFiles="$(OutDir)SmartEnemyPathfinding.dll" DestinationFolder="$(MSBuildProjectDirectory)\Package" />
