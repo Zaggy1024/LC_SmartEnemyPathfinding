@@ -149,6 +149,21 @@ internal static class PatchMaskedPlayerEnemy
 
     private static void StartSearch(MaskedPlayerEnemy masked, Vector3 searchStart, AISearchRoutine searchRoutine)
     {
+        if (searchRoutine == masked.searchForPlayers)
+        {
+            if (Plugin.GlobalRoaming.Value)
+            {
+                if (!originalSearchWidths.ContainsKey(masked))
+                    originalSearchWidths[masked] = searchRoutine.searchWidth;
+                searchRoutine.searchWidth = float.PositiveInfinity;
+            }
+            else if (originalSearchWidths.TryGetValue(masked, out var originalSearchWidth))
+            {
+                searchRoutine.searchWidth = originalSearchWidth;
+                originalSearchWidths.Remove(masked);
+            }
+        }
+
         masked.StartSmartSearch(searchStart, GetAllowedPathLinks(), RoamToSmartPathDestination, searchRoutine);
     }
 
