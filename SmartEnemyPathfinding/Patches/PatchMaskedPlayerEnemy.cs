@@ -24,8 +24,6 @@ internal static class PatchMaskedPlayerEnemy
         Failure,
     }
 
-    private static bool globalRoaming = false;
-
     [HarmonyPrefix]
     [HarmonyPatch(nameof(MaskedPlayerEnemy.Awake))]
     private static void AwakePrefix(MaskedPlayerEnemy __instance)
@@ -41,14 +39,14 @@ internal static class PatchMaskedPlayerEnemy
     [HarmonyPatch(nameof(MaskedPlayerEnemy.SetEnemyOutside))]
     private static void ReplaceAINodesPostfix(MaskedPlayerEnemy __instance)
     {
-        if (globalRoaming)
+        if (Plugin.GlobalRoaming.Value)
             __instance.allAINodes = [.. GameObject.FindGameObjectsWithTag("OutsideAINode"), .. GameObject.FindGameObjectsWithTag("AINode")];
     }
 
     private static SmartPathfindingLinkFlags GetAllowedPathLinks()
     {
         var allowedLinks = SmartPathfindingLinkFlags.InternalTeleports | SmartPathfindingLinkFlags.Elevators | SmartPathfindingLinkFlags.MainEntrance;
-        if (globalRoaming)
+        if (Plugin.GlobalRoaming.Value)
             allowedLinks |= SmartPathfindingLinkFlags.FireExits;
         return allowedLinks;
     }
@@ -58,7 +56,7 @@ internal static class PatchMaskedPlayerEnemy
         if (teleport.exitPoint == null && !teleport.FindExitPoint())
             return;
 
-        if (globalRoaming)
+        if (Plugin.GlobalRoaming.Value)
         {
             var searchWasInProgress = masked.searchForPlayers.inProgress;
             masked.searchForPlayers.inProgress = false;
@@ -130,7 +128,7 @@ internal static class PatchMaskedPlayerEnemy
 
     private static bool CheckIfPlayersAreTargetable(MaskedPlayerEnemy masked)
     {
-        if (globalRoaming)
+        if (Plugin.GlobalRoaming.Value)
             return true;
 
         if (masked.GetClosestPlayer() == null)
