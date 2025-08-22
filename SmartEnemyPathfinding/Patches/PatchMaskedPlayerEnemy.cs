@@ -15,6 +15,7 @@ namespace SmartEnemyPathfinding.Patches;
 [HarmonyPatch(typeof(MaskedPlayerEnemy))]
 internal static class PatchMaskedPlayerEnemy
 {
+    private static readonly Dictionary<MaskedPlayerEnemy, float> originalSearchWidths = [];
     private static readonly Dictionary<MaskedPlayerEnemy, SmartPathTask> tasks = [];
 
     enum GoToDestinationResult
@@ -164,7 +165,10 @@ internal static class PatchMaskedPlayerEnemy
             }
         }
 
-        masked.StartSmartSearch(searchStart, GetAllowedPathLinks(), RoamToSmartPathDestination, searchRoutine);
+        var config = new SmartRoaming.Config(GetAllowedPathLinks());
+        if (Plugin.GlobalRoaming.Value)
+            config.timeToNavigateToCurrentDestination = 40f;
+        masked.StartSmartSearch(searchStart, config, RoamToSmartPathDestination, searchRoutine);
     }
 
     private static void PathToPlayer(MaskedPlayerEnemy masked, PlayerControllerB player)
