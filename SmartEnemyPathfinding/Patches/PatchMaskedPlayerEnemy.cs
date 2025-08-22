@@ -205,6 +205,8 @@ internal static class PatchMaskedPlayerEnemy
         // +   if (!CheckIfPlayersAreTargetable(this))
         // +     return;
         //   }
+        //   if (!searchForPlayers.inProgress)
+        //     StartSearch(base.transform.position, searchForPlayers);
         var injector = new ILInjector(instructions, generator)
             .Find([
                 ILMatcher.Call(typeof(Time).GetProperty(nameof(Time.realtimeSinceStartup)).GetMethod),
@@ -234,7 +236,7 @@ internal static class PatchMaskedPlayerEnemy
             .GoToMatchEnd()
             .AddLabel(skipReturnLabel);
 
-        // - this.StartSearch([...])
+        // - StartSearch([...])
         // + PatchMaskedPlayerEnemy.StartSearch(this, [...])
         injector.GoToStart();
         while (true)
@@ -254,7 +256,7 @@ internal static class PatchMaskedPlayerEnemy
                 .GoToMatchEnd();
         }
 
-        // - this.SetMovingTowardsTargetPlayer(player)
+        // - SetMovingTowardsTargetPlayer(player)
         // + PatchMaskedPlayerEnemy.PathToPlayer(this, player)
         injector.GoToStart();
         while (true)
