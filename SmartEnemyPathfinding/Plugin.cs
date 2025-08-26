@@ -31,5 +31,6 @@ public class Plugin : BaseUnityPlugin
         GlobalRoaming = Config.Bind("Masked", "GlobalRoaming", false, "Whether the masked player search routine should take them through fire exits and the main entrance. When enabled, the masked will no longer run straight to the main entrance to leave the interior when no players are inside.");
 
         harmony.PatchAll(typeof(PatchMaskedPlayerEnemy));
+        harmony.PatchAll(typeof(PatchEnemyAI));
     }
 }

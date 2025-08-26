@@ -1,8 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-using GameNetcodeStuff;
 using HarmonyLib;
 using PathfindingLib.API.SmartPathfinding;
 using UnityEngine;
@@ -16,7 +15,14 @@ namespace SmartEnemyPathfinding.Patches;
 internal static class PatchMaskedPlayerEnemy
 {
     private static readonly Dictionary<MaskedPlayerEnemy, float> originalSearchWidths = [];
-    private static readonly Dictionary<MaskedPlayerEnemy, SmartPathTask> tasks = [];
+
+    private class TaskData()
+    {
+        internal SmartPathTask task = new();
+        internal bool lastPathWasDirect = false;
+    }
+
+    private static readonly Dictionary<MaskedPlayerEnemy, TaskData> tasks = [];
 
     enum GoToDestinationResult
     {
@@ -26,7 +32,7 @@ internal static class PatchMaskedPlayerEnemy
     }
 
     [HarmonyPrefix]
-    [HarmonyPatch(nameof(MaskedPlayerEnemy.Awake))]
+    [HarmonyPatch(typeof(MaskedPlayerEnemy), nameof(MaskedPlayerEnemy.Awake))]
     private static void AwakePrefix(MaskedPlayerEnemy __instance)
     {
         var agent = __instance.GetComponentInChildren<NavMeshAgent>();
@@ -94,36 +100,43 @@ internal static class PatchMaskedPlayerEnemy
             }
         }
 
-        masked.SetDestinationToPosition(destination.Position);
+        masked.moveTowardsDestination = true;
+        masked.destination = destination.Position;
         return true;
+    }
+
+    private static bool SetDestinationToSmartPathDestination(MaskedPlayerEnemy masked, in SmartPathDestination destination)
+    {
+        masked.movingTowardsTargetPlayer = false;
+        return GoToSmartPathDestination(masked, in destination);
     }
 
     private static void RoamToSmartPathDestination(EnemyAI maskedAI, in SmartPathDestination destination)
     {
-        GoToSmartPathDestination((MaskedPlayerEnemy)maskedAI, destination);
+        SetDestinationToSmartPathDestination((MaskedPlayerEnemy)maskedAI, destination);
     }
 
     private static GoToDestinationResult GoToDestination(MaskedPlayerEnemy masked, Vector3 targetPosition)
     {
         var result = GoToDestinationResult.InProgress;
 
-        if (tasks.TryGetValue(masked, out var task))
+        if (tasks.TryGetValue(masked, out var taskData))
         {
-            if (!task.IsResultReady(0))
+            if (!taskData.task.IsResultReady(0))
                 return result;
 
-            if (task.GetResult(0) is SmartPathDestination destination)
-                result = GoToSmartPathDestination(masked, in destination) ? GoToDestinationResult.Success : GoToDestinationResult.Failure;
+            if (taskData.task.GetResult(0) is SmartPathDestination destination)
+                result = SetDestinationToSmartPathDestination(masked, in destination) ? GoToDestinationResult.Success : GoToDestinationResult.Failure;
             else
                 result = GoToDestinationResult.Failure;
         }
         else
         {
-            task = new SmartPathTask();
-            tasks[masked] = task;
+            taskData = new();
+            tasks[masked] = taskData;
         }
 
-        task.StartPathTask(masked.agent, masked.transform.position, targetPosition, GetAllowedPathLinks());
+        taskData.task.StartPathTask(masked.agent, masked.transform.position, targetPosition, GetAllowedPathLinks());
         return result;
     }
 
@@ -171,29 +184,35 @@ internal static class PatchMaskedPlayerEnemy
         masked.StartSmartSearch(searchStart, config, RoamToSmartPathDestination, searchRoutine);
     }
 
-    private static void PathToPlayer(MaskedPlayerEnemy masked, PlayerControllerB player)
+    internal static bool NavigateTowardsTargetPlayerPrefix(MaskedPlayerEnemy masked)
     {
-        if (tasks.TryGetValue(masked, out var task))
-        {
-            if (!task.IsResultReady(0))
-                return;
+        var targetPlayer = masked.targetPlayer;
+        if (targetPlayer == null)
+            return true;
 
-            if (task.GetResult(0) is SmartPathDestination destination)
+        var result = false;
+
+        if (tasks.TryGetValue(masked, out var taskData))
+        {
+            if (!taskData.task.IsResultReady(0))
+                return taskData.lastPathWasDirect;
+
+            if (taskData.task.GetResult(0) is SmartPathDestination destination)
             {
-                if (destination.Type == SmartDestinationType.DirectToDestination)
-                    masked.SetMovingTowardsTargetPlayer(player);
-                else
+                taskData.lastPathWasDirect = destination.Type == SmartDestinationType.DirectToDestination;
+                result = taskData.lastPathWasDirect;
+                if (!taskData.lastPathWasDirect)
                     GoToSmartPathDestination(masked, in destination);
             }
         }
         else
         {
-            task = new SmartPathTask();
-            tasks[masked] = task;
+            taskData = new();
+            tasks[masked] = taskData;
         }
 
-        task.StartPathTask(masked.agent, masked.transform.position, player.transform.position, GetAllowedPathLinks());
-        return;
+        taskData.task.StartPathTask(masked.agent, masked.transform.position, targetPlayer.transform.position, GetAllowedPathLinks());
+        return result;
     }
 
     [HarmonyTranspiler]
@@ -252,26 +271,6 @@ internal static class PatchMaskedPlayerEnemy
             injector
                 .ReplaceLastMatch([
                     new(OpCodes.Call, typeof(PatchMaskedPlayerEnemy).GetMethod(nameof(StartSearch), BindingFlags.NonPublic | BindingFlags.Static, [typeof(MaskedPlayerEnemy), typeof(Vector3), typeof(AISearchRoutine)])),
-                ])
-                .GoToMatchEnd();
-        }
-
-        // - SetMovingTowardsTargetPlayer(player)
-        // + PatchMaskedPlayerEnemy.PathToPlayer(this, player)
-        injector.GoToStart();
-        while (true)
-        {
-            injector
-                .Find([
-                    ILMatcher.Call(typeof(EnemyAI).GetMethod(nameof(EnemyAI.SetMovingTowardsTargetPlayer), [typeof(PlayerControllerB)])),
-                ]);
-
-            if (!injector.IsValid)
-                break;
-
-            injector
-                .ReplaceLastMatch([
-                    new(OpCodes.Call, typeof(PatchMaskedPlayerEnemy).GetMethod(nameof(PathToPlayer), BindingFlags.NonPublic | BindingFlags.Static, [typeof(MaskedPlayerEnemy), typeof(PlayerControllerB)])),
                 ])
                 .GoToMatchEnd();
         }
