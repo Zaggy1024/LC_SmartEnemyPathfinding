@@ -4,6 +4,7 @@ using System.Reflection.Emit;
 
 using HarmonyLib;
 using PathfindingLib.API.SmartPathfinding;
+using PathfindingLib.Utilities;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -136,7 +137,7 @@ internal static class PatchMaskedPlayerEnemy
             tasks[masked] = taskData;
         }
 
-        taskData.task.StartPathTask(masked.agent, masked.transform.position, targetPosition, GetAllowedPathLinks());
+        taskData.task.StartPathTask(masked.agent, masked.agent.GetPathOrigin(), targetPosition, GetAllowedPathLinks());
         return result;
     }
 
@@ -211,7 +212,7 @@ internal static class PatchMaskedPlayerEnemy
             tasks[masked] = taskData;
         }
 
-        taskData.task.StartPathTask(masked.agent, masked.transform.position, targetPlayer.transform.position, GetAllowedPathLinks());
+        taskData.task.StartPathTask(masked.agent, masked.agent.GetPathOrigin(), targetPlayer.transform.position, GetAllowedPathLinks());
         return result;
     }
 
