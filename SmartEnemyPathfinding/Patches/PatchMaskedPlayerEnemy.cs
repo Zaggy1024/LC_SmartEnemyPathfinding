@@ -141,6 +141,25 @@ internal static class PatchMaskedPlayerEnemy
         return result;
     }
 
+    private static bool AllPlayersAreShutInShip()
+    {
+        if (!StartOfRound.Instance.hangarDoorsClosed)
+            return false;
+
+        foreach (var player in StartOfRound.Instance.allPlayerScripts)
+        {
+            if (!player.isPlayerControlled)
+                continue;
+            if (player.isPlayerDead)
+                continue;
+            if (player.inAnimationWithEnemy)
+                continue;
+            if (!player.isInHangarShipRoom)
+                return false;
+        }
+        return true;
+    }
+
     private static bool CheckIfPlayersAreTargetable(MaskedPlayerEnemy masked)
     {
         if (Plugin.GlobalRoaming.Value)
@@ -148,6 +167,9 @@ internal static class PatchMaskedPlayerEnemy
 
         if (masked.GetClosestPlayer() == null)
         {
+            if (masked.isOutside && AllPlayersAreShutInShip())
+                return true;
+
             var result = GoToDestination(masked, RoundManager.FindMainEntrancePosition(getTeleportPosition: true, getOutsideEntrance: !masked.isOutside));
 
             if (result == GoToDestinationResult.InProgress)
