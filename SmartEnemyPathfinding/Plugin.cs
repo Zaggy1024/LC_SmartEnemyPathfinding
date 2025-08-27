@@ -15,7 +15,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string PluginName = "SmartEnemyPathfinding";
     public const string PluginGUID = "Zaggy1024." + PluginName;
-    public const string PluginVersion = "0.0.2";
+    public const string PluginVersion = "0.0.3";
 
     private readonly Harmony harmony = new(PluginGUID);
 
