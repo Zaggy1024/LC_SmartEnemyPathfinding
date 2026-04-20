@@ -61,7 +61,7 @@ internal static class PatchMaskedPlayerEnemy
 
     private static void UseTeleport(MaskedPlayerEnemy masked, EntranceTeleport teleport)
     {
-        if (teleport.exitPoint == null && !teleport.FindExitPoint())
+        if (teleport.exitScript == null && !teleport.FindExitPoint())
             return;
 
         if (Plugin.GlobalRoaming.Value)
@@ -69,13 +69,13 @@ internal static class PatchMaskedPlayerEnemy
             var searchWasInProgress = masked.searchForPlayers.inProgress;
             masked.searchForPlayers.inProgress = false;
 
-            masked.TeleportMaskedEnemyAndSync(teleport.exitPoint.position, setOutside: !teleport.isEntranceToBuilding);
+            masked.TeleportMaskedEnemyAndSync(teleport.exitScript.entrancePoint.position, setOutside: !teleport.isEntranceToBuilding);
 
             masked.searchForPlayers.inProgress = searchWasInProgress;
         }
         else
         {
-            masked.TeleportMaskedEnemyAndSync(teleport.exitPoint.position, setOutside: !teleport.isEntranceToBuilding);
+            masked.TeleportMaskedEnemyAndSync(teleport.exitScript.entrancePoint.position, setOutside: !teleport.isEntranceToBuilding);
         }
     }
 
