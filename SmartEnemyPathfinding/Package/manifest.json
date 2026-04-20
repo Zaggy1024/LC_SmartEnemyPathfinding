@@ -1,7 +1,7 @@
 {
     "name": "SmartEnemyPathfinding",
     "author": "Zaggy1024",
-    "version_number": "0.0.3",
+    "version_number": "0.0.4",
     "website_url": "https://github.com/Zaggy1024/LC_SmartEnemyPathfinding/",
     "description": "Patches the masked to allow them to use custom elevators via PathfindingLib's smart pathfinding API.",
     "dependencies": [
